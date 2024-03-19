@@ -8,6 +8,4 @@ Web Application firewall - WAF are used to filter request based on the rules. It
 
 Cloudwatch - Cloudwatch used to monitor the performance of the resouces and the applications. It provide metrics foe every services. It's a unified view of operational health.We can create an alarm to take action based on metrics. Logs also can collected from many services
 
-
-Simple Notification Service - SNS is notification service which use to monitor and send a notification when something happens. It works on the pub/sub model.
-It allows to send notifications through the push method.
+Simple Notification Service - SNS is notification service which use to monitor and send a notification when something happens. It works on the pub/sub model. It allows to send notifications through the push method.
