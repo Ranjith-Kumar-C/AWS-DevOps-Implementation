@@ -1,0 +1,36 @@
+- VPC components used:-
+*vpc
+*subnet
+*route tables
+*Internet gateway
+*NAT gatewatay
+
+- EC2 instance used as a Jump server/Bastion host
+
+- Jump server is an intermediary server used to access and manage devices or services in a separate security zone, typically a private network or subnet, from an external or less trusted network, such as the internet.  
+
+-To copy the key pair from local machine to the public instance:-
+
+scp -i C:/Users/Ranjith/Downloads/neww.pem C:/Users/Ranjith/Downloads/neww.pem ubuntu@35.174.241.200:/home/ubuntu
+
+- To login to the instance in the terminal
+
+ ssh -i "neww.pem" ubuntu@35.174.241.200
+
+-i option in the ssh command specifies the identity file (private key) to be used for public key authentication when connecting to a remote server.This tells SSH to use the private key for authentication when connecting to the remote server hostname as the user user.
+
+- HTML file
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>My AWS Production VPC</h1>
+<p>Servers in the private subnet</p>
+
+</body>
+</html>
+
+- python3 -m http.server 8000
+
+The command  is used to start a simple HTTP server locally on your machine. This command launches a Python 3 module called http.server, which provides a basic web server functionality.It serves files from the current directory over HTTP on port 8000 by default.
