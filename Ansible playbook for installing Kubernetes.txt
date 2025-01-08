@@ -1,0 +1,159 @@
+Ansible playbook for installing kubernetes master and slave:
+
+
+---
+- name: Prepare Kubernetes Nodes
+  hosts: all
+  become: yes
+  tasks:
+    - name: Disable swap
+      command: swapoff -a
+
+    - name: Ensure modules are loaded at bootup
+      copy:
+        content: |
+          overlay
+          br_netfilter
+        dest: /etc/modules-load.d/k8s.conf
+
+    - name: Load kernel modules
+      command: "{{ item }}"
+      loop:
+        - modprobe overlay
+        - modprobe br_netfilter
+
+    - name: Configure sysctl parameters
+      copy:
+        content: |
+          net.bridge.bridge-nf-call-iptables  = 1
+          net.bridge.bridge-nf-call-ip6tables = 1
+          net.ipv4.ip_forward                 = 1
+        dest: /etc/sysctl.d/k8s.conf
+
+    - name: Apply sysctl parameters
+      command: sysctl --system
+
+    - name: Install prerequisites
+      apt:
+        name:
+          - software-properties-common
+          - curl
+          - apt-transport-https
+          - ca-certificates
+          - gpg
+        state: present
+        update_cache: yes
+
+- name: Setup Kubernetes Master
+  hosts: master
+  become: yes
+  tasks:
+    - name: Import CRI-O GPG key
+      apt_key:
+        url: https://packages.k8s.io/keys/apt/apt-key.gpg
+        state: present
+
+    - name: Add CRI-O repository
+      apt_repository:
+        repo: 'deb [arch=amd64] https://packages.k8s.io/addons:/cri-o:/prerelease:/main/deb/ /'
+        filename: cri-o
+        state: present
+
+    - name: Install CRI-O runtime package
+      apt:
+        name: cri-o
+        state: present
+        update_cache: yes
+
+    - name: Enable and start CRI-O service
+      systemd:
+        name: crio
+        enabled: yes
+        state: started
+
+    - name: Import Kubernetes GPG key
+      apt_key:
+        url: https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key
+        state: present
+
+    - name: Add Kubernetes APT repository
+      apt_repository:
+        repo: 'deb [arch=amd64] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /'
+        filename: kubernetes
+        state: present
+
+    - name: Install Kubernetes packages
+      apt:
+        name:
+          - kubelet=1.29.0-*
+          - kubectl=1.29.0-*
+          - kubeadm=1.29.0-*
+          - jq
+        state: present
+        update_cache: yes
+
+    - name: Enable and start kubelet service
+      systemd:
+        name: kubelet
+        enabled: yes
+        state: started
+
+    - name: Pull Kubernetes images
+      command: kubeadm config images pull
+
+    - name: Initialize Kubernetes Master
+      command: kubeadm init
+      register: kubeadm_init
+
+    - name: Copy kubeconfig to user's home directory
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: "{{ ansible_env.HOME }}/.kube/config"
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_gid }}"
+        mode: '0600'
+
+    - name: Apply Calico Network Plugin
+      command: kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/master/manifests/calico.yaml
+      environment:
+        KUBECONFIG: "{{ ansible_env.HOME }}/.kube/config"
+
+    - name: Get Kubernetes join command
+      command: kubeadm token create --print-join-command
+      register: join_command
+
+    - name: Save join command
+      copy:
+        content: "{{ join_command.stdout }}"
+        dest: /tmp/kubeadm-join-command.txt
+
+- name: Setup Kubernetes Workers
+  hosts: worker
+  become: yes
+  tasks:
+    - name: Import CRI-O GPG key
+      apt_key:
+        url: https://packages.k8s.io/keys/apt/apt-key.gpg
+        state: present
+
+    - name: Add CRI-O repository
+      apt_repository:
+        repo: 'deb [arch=amd64] https://packages.k8s.io/addons:/cri-o:/prerelease:/main/deb/ /'
+        filename: cri-o
+        state: present
+
+    - name: Install CRI-O runtime package
+      apt:
+        name: cri-o
+        state: present
+        update_cache: yes
+
+    - name: Enable and start CRI-O service
+      systemd:
+        name: crio
+        enabled: yes
+        state: started
+
+    - name: Import Kubernetes GPG key
+      apt_key:
+        url: https://pkgs.k8s.io/core:/
