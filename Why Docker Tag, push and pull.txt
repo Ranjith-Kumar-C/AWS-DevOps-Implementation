@@ -1,0 +1,23 @@
+Tagging images before pushing them to Docker Hub (or any container registry) serves a few important purposes:
+
+Identifying Versions: Tagging allows you to specify versions or different variations of the same image. This is crucial for version control and managing different configurations or updates.
+
+Naming Convention: Tagging helps maintain a clear naming convention for your images. It makes it easier to understand what each image represents, especially when you have multiple images or versions.
+
+Pushing to Registry: Docker Hub (and most container registries) require images to be tagged before pushing them. The tag acts as a reference for the image within the registry.
+
+Pulling Specific Versions: By tagging images, you can specify which version of the image to pull when deploying or running containers. This ensures consistency and reproducibility in your deployment process.
+
+In summary, tagging images before pushing them to Docker Hub provides clarity, organization, and control over image versions, which are essential aspects of managing containerized applications effectively.
+
+
+Command for tag  :   sudo docker tag <image id> <dockerhub username>/<Repository name>:<Name to be given for tag>latest
+                     sudo docker tag 17c0145030df crk23/my_repo:latest
+
+push command     :   sudo docker push <dockerhub username>/<Repository name>:<tag name>
+                     sudo docker push crk23/my_repo:latest
+
+
+
+
+
