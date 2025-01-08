@@ -1,0 +1,200 @@
+Ansible Assignments:
+
+Assignment - 1:
+
+Tasks To Be Performed:
+1. Setup Ansible cluster with 3 nodes
+2. On slave 1 install Java
+3. On slave 2 install MySQL server
+Do the above tasks using Ansible Playbooks
+
+1.Setup Ansible cluster with 3 nodes:
+
+- name: Setup Ansible cluster with 3 nodes
+  hosts: all
+  tasks:
+    - name: Ensure Ansible is installed
+      become: true
+      apt:
+        name: ansible
+        state: present
+
+
+On slave 1 install Java:
+
+- name: Install Java on slave 1
+  hosts: webserver
+  tasks:
+    - name: Install Java
+      become: true
+      apt:
+        name: openjdk-11-jdk
+        state: present
+
+
+On slave 2 install MySQL server:
+
+- name: Install MySQL server on slave 2
+  hosts: dbserver
+  tasks:
+    - name: Install MySQL server
+      become: true
+      apt:
+        name: mysql-server
+        state: present
+
+--------------------------------------------------------------------------------------------------------------------
+
+Assignemnt - 2:
+
+Tasks To Be Performed:
+1. Create a script which can add text “This text has been added by custom
+script” to /tmp.1.txt
+2. Run this script using Ansible on all the hosts
+
+
+script.sh
+#!/bin/bash
+
+echo "“This text has been added by custom script" > /tmp/1.txt
+
+script.yaml
+---
+- name: adding text to /tmp/1.txt
+  hosts: all
+  become: true
+  tasks:
+    - name: Execute script
+      script: text.sh
+
+------------------------------------------------------------------------------------------------------------------
+
+Assignment -3:
+
+Tasks To Be Performed:
+1. Create 2 Ansible roles
+2. Install Apache2 on slave1 using one role and NGINX on slave2 using the
+other role
+3. Above should be implemented using different Ansible roles
+
+sudo ansible-galaxy init "role name"
+sudo ansible-galaxy init "role name"
+
+Mention in main.yml in etc/ansible/roles/tasks/main.yml under the apache role
+---
+- name: Install Apache2 on slave1
+  apt:
+    name: apache2
+    state: latest
+  become: yes
+
+Mention in main.yml in  etc/ansible/roles/tasks/main.yml under the nginx role
+---
+- name: Install NGINX on slave2                                      
+  apt:
+    name: nginx
+    state: latest
+  become: yes
+
+
+create yaml file under etc/ansible
+---
+- name: Install Web Servers
+  hosts: slave1:slave2  #manage node names
+  become: true
+  roles:
+    - apache
+    - nginx
+
+
+-------------------------------------------------------------------------------------------------------------
+
+Assignemnt - 4: 
+
+Tasks To Be Performed:
+1. Use the previous deployment of Ansible cluster
+2. Configure the files folder in the role with index.html which should be
+replaced with the original index.html
+All of the above should only happen on the slave which has NGINX installed
+using the role.
+
+Solution:
+
+1. Create index.html file under /etc/ansible/roles/"role name "/files/index.html
+
+2. Create copy.yaml under /etc/ansible , which should be replaced with the original index.html index.html from 
+
+copy.yaml
+---
+- name: replace default nginx page with custom page
+  copy:
+    src: /etc/ansible/roles/nginx/files/index.html
+    dest: /var/www/html/
+
+3. Include the copy.yaml inside the /etc/ansible/roles/"role name "/tasks/main.yml
+---
+- name: Install NGINX on slave2
+  apt:
+    name: nginx
+    state: latest
+- include_tasks: copy.yaml
+
+
+4. Create a playbook to execute the given task using the roles
+---
+- name: installing apache2
+  hosts: dbserver
+  become: true
+  roles:
+    - nginx
+
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+Assignment -5:
+
+Tasks To Be Performed:
+1. Create a new deployment of Ansible cluster of 5 nodes
+2. Label 2 nodes as test and other 2 as prod
+3. Install Java on test nodes
+4. Install MySQL server on prod nodes
+Use Ansible roles for the above and group the hosts under test and prod.
+
+
+1. Create two roles under /etc/ansible/roles
+sudo ansible-galaxy init java 
+sudo ansible-galaxy init mysql
+
+2. Under /etc/ansible/roles/java/tasks paste the yaml inside the main.yml
+
+---
+- name: Install java on test
+  apt:
+    name: openjdk-11-jdk
+    state: latest
+  become: yes
+
+3. Under /etc/ansible/roles/mysql/tasks paste the yaml inside the main.yml
+---
+- name: Install mysql on prod
+  apt:
+    name: mysql-server
+    state: latest
+  become: yes
+
+4. Under /etc/ansible create a yaml file playbook
+
+assign5.yaml
+---
+- name: Install java and mysql
+  hosts: test:prod
+  become: true
+  roles:
+    - java
+    - mysql
+
+-------------------------------------------------------------------------------------------------------------------
+
+
+
+
